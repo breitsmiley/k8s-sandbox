@@ -10,3 +10,7 @@ output "ec2_k8s_worker" {
   }
 }
 
+#output "aws_key_pair" {
+#  value = aws_key_pair.k8s_ssh_key
+#}
+

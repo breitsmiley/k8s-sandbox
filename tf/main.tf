@@ -5,7 +5,7 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 5.4.0"
+      version = "~> 5.37.0"
     }
   }
   required_version = "~> 1.7.1"
@@ -30,7 +30,7 @@ data "aws_availability_zones" "available" {}
 locals {
   name   = "k8s-sandbox"
 
-  vpc_cidr = "10.0.0.0/24"
+  vpc_cidr = "10.0.0.0/16"
 
   master_node_name = "k8s-master"
   worker_node_name = "k8s-worker"
@@ -98,12 +98,12 @@ module "ec2_k8s_master" {
   ]
 }
 
-### EBS attached to EC2
-#resource "aws_volume_attachment" "k8s_master" {
-#  device_name = "/dev/sda1"
-#  volume_id   = aws_ebs_volume.k8s_master.id
-#  instance_id = module.ec2_k8s_master.id
-#}
+#### EBS attached to EC2
+##resource "aws_volume_attachment" "k8s_master" {
+##  device_name = "/dev/sda1"
+##  volume_id   = aws_ebs_volume.k8s_master.id
+##  instance_id = module.ec2_k8s_master.id
+##}
 
 # EIP attached to EC2
 resource "aws_eip_association" "eip_assoc_k8s_master" {
@@ -135,12 +135,13 @@ module "ec2_k8s_worker" {
   ]
 }
 
-#resource "aws_volume_attachment" "k8s_worker" {
-#  device_name = "/dev/sda1"
-#  volume_id   = aws_ebs_volume.k8s_worker.id
-#  instance_id = module.ec2_k8s_worker.id
-#}
-#
+##resource "aws_volume_attachment" "k8s_worker" {
+##  device_name = "/dev/sda1"
+##  volume_id   = aws_ebs_volume.k8s_worker.id
+##  instance_id = module.ec2_k8s_worker.id
+##}
+##
+
 # EIP attached to EC2
 resource "aws_eip_association" "eip_assoc_worker_eip" {
   instance_id   = module.ec2_k8s_worker.id
@@ -163,7 +164,7 @@ module "vpc" {
 
   azs = local.azs
   # 10.0.0.0/28 [10.0.0.0 - 10.0.0.15], 10.0.0.16/28 [10.0.0.16 - 10.0.0.31]
-  public_subnets = [cidrsubnet(local.vpc_cidr, 4, 0), cidrsubnet(local.vpc_cidr, 4, 1)]
+  public_subnets = [for k, v in local.azs : cidrsubnet(local.vpc_cidr, 8, k + 4)]
 }
 
 module "security_group" {
@@ -194,6 +195,7 @@ module "security_group" {
 # ------------------------------------------------------------------
 resource "aws_key_pair" "k8s_ssh_key" {
   public_key = length(var.k8s_ssh_key) > 0 ? var.k8s_ssh_key : file(var.k8s_ssh_key_path)
+  key_name   = local.ssh_key_name
 }
 
 # EIP
