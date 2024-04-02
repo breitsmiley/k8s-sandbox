@@ -1,6 +1,9 @@
 # AWS Environment for course: Kubernetes for Developers (LFD259)
 https://training.linuxfoundation.org/training/kubernetes-for-developers/
 
+# AWS instance static DNS server
+https://repost.aws/knowledge-center/ec2-static-dns-ubuntu-debian
+
 # Setup
 
 ## State File
